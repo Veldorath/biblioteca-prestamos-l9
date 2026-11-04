@@ -7,6 +7,7 @@ import { PublicadorService } from '../mensajeria/publicador.service.js';
 import { ROUTING_KEYS } from '../mensajeria/topologia.js';
 import { CrearPrestamoDto } from './dto/crear-prestamo.dto.js';
 import { PrestamosRepositorio } from './prestamos.repositorio.js';
+import { PublicadorKafkaService } from '../kafka/publicador-kafka.service.js';
 
 // El BFF llama a la raiz (http://prestamos:3002) y el gateway a /prestamos: las dos rutas valen.
 const RAIZ = ['', 'prestamos'];
@@ -26,6 +27,7 @@ export class PrestamosController {
   constructor(
     private readonly prestamos: PrestamosRepositorio,
     private readonly publicador: PublicadorService,
+    private readonly kafka: PublicadorKafkaService,
   ) {}
 
   @Get(RAIZ)
@@ -64,6 +66,11 @@ export class PrestamosController {
       usuarioSub: req.sub,
       hasta: nuevo.hasta,
     });
+    await this.kafka.publicar('prestamo.creado', nuevo.libroId, req.sub, {
+      prestamoId: String(nuevo.id),
+      desde: nuevo.desde,
+      hasta: nuevo.hasta,
+    });
     return nuevo;
   }
 
@@ -84,6 +91,9 @@ export class PrestamosController {
       prestamoId: prestamo.id,
       libroId: prestamo.libroId,
       usuarioSub: req.sub,
+    });
+    await this.kafka.publicar('prestamo.devuelto', prestamo.libroId, prestamo.usuarioSub, {
+      prestamoId: String(prestamo.id),
     });
     return prestamo;
   }

@@ -3,9 +3,10 @@ import { JwtGuard } from '../auth/jwt.guard.js';
 import { MensajeriaModule } from '../mensajeria/mensajeria.module.js';
 import { PrestamosController } from './prestamos.controller.js';
 import { PrestamosRepositorio } from './prestamos.repositorio.js';
+import { KafkaModule } from '../kafka/kafka.module.js';
 
 @Module({
-  imports: [MensajeriaModule],
+  imports: [MensajeriaModule, KafkaModule],
   controllers: [PrestamosController],
   providers: [PrestamosRepositorio, JwtGuard],
 })
